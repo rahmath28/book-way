@@ -16,6 +16,9 @@ loadEventListeners();//referencce ah irukka functions ah ellam   called a functi
 
 function loadEventListeners(){   // intha load event listener ah already call panniyachu, so ithukku ulla event listeners reference ah irukka functions ah call panna theva illa...
 
+
+    // get task from local storage..
+    document.addEventListener("DOMContentLoaded", getTask)
     // Add Task Event
     form.addEventListener("submit", addTask); 
 
@@ -26,9 +29,36 @@ function loadEventListeners(){   // intha load event listener ah already call pa
     clearBtn.addEventListener("click", clearTask)
 
     // for search task
-    search.addEventListener("input", searchTask) // event input ... new try to understand..
+    search.addEventListener("keyup", searchTask) // event "keyup" ... type pandra ellam get pannalam....
    
 }
+
+// //  to display initially the ls stored task
+function getTask() {
+    let tasks; // key name , im gong to use for ls.
+    if (localStorage.getItem("tasks") === null) { // "tasks" : keyname
+        tasks = []; // 
+    } else {
+        tasks = JSON.parse(localStorage.getItem("tasks")) // tasks dra variable la parse pandrom.. , antha original array of data kedaikum..
+        tasks.forEach((task) => { // so i can use forEach method..
+
+        // to display all each item  as li
+        const li = document.createElement("li");
+        li.className = "collection-item";
+        li.innerText = task; // ls data as task
+        const link = document.createElement("a");
+        link.className = "delete-item secondary-content";
+        link.innerHTML = `<i class="fa fa-remove"></i>`;
+        li.appendChild(link);
+        taskList.appendChild(li)
+
+
+        })
+    }
+}
+
+
+
 
 function addTask(e){
 
@@ -67,6 +97,7 @@ function addTask(e){
         // Add li to ul, task list is ul.
         taskList.prepend(li);    // tasklist >> ul  // >> ul la prepend panniten..( appendchiild na end la add agum, prepend child naa front la add agum )
 
+        storeInLocalStorage(taskInput.value)
         /*
           
         taskList.appendChild(li); >> apendchild na end la task add agum.
@@ -89,6 +120,51 @@ function addTask(e){
     }
 
 }
+
+    // store in local storage.
+    function storeInLocalStorage(task){ // task add pannumpothu , input la get pandra task ah  , local storage la update pandren..
+        // console.log(task); // got the input value , task i add.
+
+        let tasks; // this my key name im going to create to store my data in localstorage..
+
+        // initially  na search pandra key name "tasks" illana null nu display agum atha base panni condition..
+        if(localStorage.getItem("tasks") === null){  // this if loop runs only ones initially..
+            // reason : initially entha datavum illana than if loop run agum , only once , next else loop runs..
+
+            tasks = [] // tasks key get panni null ah iruntha , tasks ku empty array assign pandrom..
+
+            // console.log(tasks) // got initial empty array..
+
+            tasks.push(task); // pushed the task i got by input into empty array..
+
+            // next  empty array la push panniyachu , atha set pannanum local storage la..
+            localStorage.setItem("tasks", JSON.stringify(tasks)) // "tasks" : key name , next  set pandra data whichmeans my task i get and pushed into array : as stringify.
+           
+            console.log("step 1 is running..")
+        } else{
+            // already irukka existing data uhm venum na , original array va get panna than new values ah push panna mudiyum.. 
+            tasks = JSON.parse(localStorage.getItem("tasks")) // getting existing original array value also in a variable tasks , so that i can get and push new inputs task.
+            // get pannum pothu "keyname" vachuthan get panna mudiyum..
+
+            // i will get oruginal array in tasks variable , so that i can now push new , input task..
+
+            tasks.push(task) // pushing the new inputs into original  arrayy..
+
+            // console.log(tasks) // got as array , next itha local storage la set pannanum.. as , string ah intha array va , so use json.stringify..
+
+            // // now i have to set it in local storage..
+            localStorage.setItem("tasks", JSON.stringify(tasks))
+
+            // just tried for understanding : new keyname layum set panna mudiyum..
+            // localStorage.setItem("task1", JSON.stringify(tasks)) // new keyname  : task1. , ls la store agum.
+
+            console.log("step 2 is running..")
+        }
+
+        
+        
+    }
+
   function clearTask(){ 
 
     // document.querySelector(".collection").innerHTML=""; // use innerHtmml ="", for clearall task..
@@ -107,10 +183,18 @@ function addTask(e){
    if(confirm("Are you sure to delete all task ?")){
 
     taskList.innerHTML="";  // instead always use innerHTML = ""
+    // to clear all in ls
+    clearFromLocalStorrage()
     
    }
     
 
+}
+
+function clearFromLocalStorrage(){
+    localStorage.clear() // simple way to clear ls data by clear method..
+    // localStorage.removeItem("tasks") // alternate way to clear by keyname.. ,
+    // some time multiles keyname irukkalam appo can use removeItem method by keyname.
 }
 
 
@@ -145,13 +229,37 @@ function removeTask(e){   // event delegation used ( na click pandratha delete p
          if(confirm("Are you sure to delete item ?")){
      
             e.target.parentElement.parentElement.remove(); // e.target >> i > a> li.remove() // removed li..
-            
+            removeFromLocalSorage(e.target.parentElement.parentElement.innerText)
         }
     }
  
 }
 
+// remove task from local storage..
+function removeFromLocalSorage(liText){ // li oda inneetext ah get pandrom..
+// console.log(liText) // got the element i  delete.
+    let tasks;
+    if(localStorage.getItem("tasks") === null){
+        tasks = [];
+    }else{
+        tasks = JSON.parse(localStorage.getItem("tasks"))
+        tasks.forEach((task, index) =>{ // getting all task and its index
+            if(liText === task){ // click panna inner text uhm loop panna tak uhm match ana , 
+                tasks.splice(index, 1) // array la irunthu splice method use panni , remove pandra , first param is index selection , which means na loop panni get panna antha tak index a pass pandren ,
+                // second param : how many characters to remove , passed 1 . to delete that task
+            }
+        })
 
+        console.log(tasks) // got the remaining task , except deleted task.. 
+        // next remove panna task ah local storage la , set pannanum.. appothan local storage la irunthu remove agum..
+        // ippo ennoda tasks key la irukka ,  array la remove panna item illa so atha update pannanum ls la.
+        localStorage.setItem("tasks", JSON.stringify(tasks)) 
+        // "tasks", JSON.stringify(tasks) : "tasks" >> keyname ,  JSON.stringify(tasks) >> ennoda tasks ah string ah set pandrom ls la..
+        // works perfectly..
+    }
+
+
+}
 
 function searchTask(e) {
 
@@ -161,8 +269,12 @@ function searchTask(e) {
     const text = e.target.value.toLowerCase().trim(); // Get the search input and convert to lowercase >> ( enna type pannalum atha lower case ah mathuren.., .trim() >> unwanted spaces ah remove pannum..)
     // eppadi type pannalum atha lower case ah change panniyachu..
 
+    
     // motha ul laiyum pathuthan match panni display pannanum , so selecting all li , by queryselector all.
     document.querySelectorAll(".collection-item").forEach(function(task) { // motha li select panni loop . >> queryselectorAll return nodelist that has prototype of of orEach method..
+
+       
+
 
 
         // for better understanding :
@@ -172,9 +284,9 @@ function searchTask(e) {
             //  What is firstChild in an < li >?
             // The firstChild refers to the very first child node inside the element — it could be:
 
-            // 1).  A text node(like your task name)
+            // 1).  A text node(like your task name) : in our project  , first child is : my task innertext.
 
-            // 2). An element node(like a < span >, <div>, etc.)
+            // 2). An element node(like a < span >, <div>, etc.) : in our project  , second child is : a tag.
 
             // 3).  A comment node, even!
             // *** / It does not look at class names or attributes.
@@ -200,22 +312,26 @@ function searchTask(e) {
         // now here item na item na task oda first child is content , na type pandrathu irunthal ul la display pandren, illana none..
 
         // motha li content oda innertext la na search input la typa pannathu irunthu match ana display pandren.. 
-        if (item.includes(text)) { // If the task contains the search input.
+        if (item.includes(text)) { // includes method : iruntha true , illana false , iruntha antha task ah display pandren..
             task.style.display = "block"; // Show the task, task na li  , .style.display, block na atha display pandren..
-           
+            
         } else {
             task.style.display = "none"; // Hide the task , task na li , .style.display none na hide pandren.
         }
+
+
     });
+ 
+
 }
 
-// // //  FOR BETTER UNDERSTANDING , READ THIS.
-// // 1. Input dra event ah use panni , search input la type pandra text ah lower case ku mathurom , and used trim method ( removes unwanted space ) .
-// // 2. motha li yum , queryselectoe all use panni , forEach method use panni, each li ah "task" nu get pandrom.
-// // 3. each task layum a tag also irukku , so task oda first child na , li  textContent kedachurum , ippo atha lower case ah change panni , trim method use pandrom.
-// // 4. next condition use panni match agura text ah displaay panna vendiyathu than.
-// // 5. so ippo li oda text which means task ah "item" dra variable la vachurukkom, atha includes method use panni check pandrom.
-// // 6. if item includes nama search panna text  na , display pandrom illana display pannala.( none)  
+// //  FOR BETTER UNDERSTANDING , READ THIS.
+// 1. Input dra event ah use panni , search input la type pandra text ah lower case ku mathurom , and used trim method ( removes unwanted space ) .
+// 2. motha li yum , queryselectoe all use panni , forEach method use panni, each li ah "task" nu get pandrom.
+// 3. each task layum a tag also irukku , so task oda first child na , li  textContent kedachurum , ippo atha lower case ah change panni , trim method use pandrom.
+// 4. next condition use panni match agura text ah displaay panna vendiyathu than.
+// 5. so ippo li oda text which means task ah "item" dra variable la vachurukkom, atha includes method use panni check pandrom.
+// 6. if item includes nama search panna text  na , display pandrom illana display pannala.( none)  
 
 
 
@@ -394,7 +510,7 @@ function searchTask(e) {
 
 
 
-  //// just practiced after month
+//   // just practiced after month
 
 
 // const form =  document.querySelector("#task-form"); // form
@@ -490,6 +606,86 @@ function searchTask(e) {
 
     
 // }
+
+
+// const form = document.querySelector("#task-form");
+// const taskInput = document.querySelector("#task");
+// const taskLists = document.querySelector(".collection");
+// const search = document.querySelector("#search");
+// const clearBtn = document.querySelector(".clear-tasks");
+
+
+// const addTask = (e)=>{
+//     e.preventDefault();
+//     //   <li class="collection-item">
+//     //             Medical Checkup
+//     //             <a href="#" class="delete-item secondary-content" id="test" title="im Link">
+//     //               <i class="fa fa-remove"></i>
+//     //             </a>
+//     //           </li>
+//     const task = document.createElement("li");
+//     task.className = "collection-item";
+//     task.innerText = taskInput.value;
+//     const a = document.createElement("a");
+//     a.className = "delete-item secondary-content";
+//     a.id = "test";
+//     a.title = "im Link"
+//     a.innerHTML=`<i class="fa fa-remove"></i>`;
+//     task.appendChild(a);
+//     taskLists.appendChild(task)
+
+//     // 
+//     form.reset()
+// }
+
+// const removeTask = (e) =>{
+    
+//     if(e.target.parentElement.classList.contains("delete-item")){
+//         if(confirm("Are you sure to remove task ?")){
+//             e.target.parentElement.parentElement.remove()
+//         }
+//     }
+   
+// }
+
+// const clearAllTask = () => {
+//   // Check if there are no tasks first
+//   if (taskLists.innerHTML.trim() === "") {
+//     alert("Task field is empty...");
+//     return; // Exit the function
+//   }
+
+//   // Ask for confirmation only if tasks exist
+//   if (confirm("Are you sure to delete all tasks ?")) {
+//     taskLists.innerHTML = "";
+//   }
+// };
+
+// const searchTask = () => {
+//   const searchValue = search.value.toLowerCase(); // Get input value
+
+//   const allTask = document.querySelectorAll(".collection-item");
+
+//   allTask.forEach((task) => {
+//     const taskText = task.textContent.toLowerCase(); // Get task text
+
+//     if (taskText.includes(searchValue)) {
+//       task.style.display = "block";  // Show task
+//     } else {
+//       task.style.display = "none";   // Hide task
+//     }
+
+   
+//   });
+
+// };
+
+// // Trigger search on input
+// search.addEventListener("keyup", searchTask);
+// form.addEventListener("submit", addTask);
+// taskLists.addEventListener("click", removeTask)
+// clearBtn.addEventListener("click", clearAllTask)
+// search.addEventListener("input", searchTask)
 
 
 
